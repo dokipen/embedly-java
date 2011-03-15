@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.8'
+}
+
+task checkGradle << {
+    println "OK"
+}
+
