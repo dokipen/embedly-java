@@ -1,3 +1,0 @@
-#!/bin/sh
-gradle compileJava copySteps
-cuke4duke --require build/classes/test/ --require build/classes/main/ --jars libs src/test/features/
