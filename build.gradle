@@ -1,5 +1,15 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
+apply plugin:com.smokejumperit.gradle.CukePlugin
+
+buildscript {
+    repositories {
+        mavenRepo urls:'http://repo.smokejumperit.com'
+    }
+    dependencies {
+        classpath 'com.smokejumperit:gradle-plugins:0.7.1-SNAPSHOT'
+    }
+}
 
 repositories {
     mavenCentral()
