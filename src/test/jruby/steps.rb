@@ -26,7 +26,9 @@ When /(\w+) is called with the (.*) URLs?( and ([^\s]+) flag)?$/ do |method, url
       opts['urls'] = urls.to_java(:string)
     end
     opts[flag] = true if flag
-    @result = JSON.parse(@api.send(method, opts).toString)
+    t= @api.send(method, opts).toString
+    puts t
+    @result = JSON.parse(t) #@api.send(method, opts).toString)
   rescue
     @error = $!
   end

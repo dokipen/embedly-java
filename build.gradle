@@ -1,3 +1,4 @@
+apply plugin: 'groovy'
 apply plugin: 'java'
 
 repositories {
@@ -5,13 +6,19 @@ repositories {
 }
 
 dependencies {
+    groovy 'org.codehaus.groovy:groovy-all:1.7.6'
     compile 'org.json:json:20090211'
     compile 'org.apache.httpcomponents:httpclient:4.0-beta2'
     compile 'commons-lang:commons-lang:2.5'
-    testRuntime 'org.picocontainer:picocontainer:2.13.2'
     runtime 'org.json:json:20090211'
     runtime 'org.apache.httpcomponents:httpclient:4.0-beta2'
     runtime 'commons-lang:commons-lang:2.5'
+    testCompile 'junit:junit:4.8.2'
+    testCompile 'org.hamcrest:hamcrest-all:1.1'
+    testRuntime 'org.picocontainer:picocontainer:2.13.2'
+    testRuntime 'log4j:log4j:1.2.16'
+    testRuntime 'junit:junit:4.8.2'
+    testRuntime 'org.hamcrest:hamcrest-all:1.1'
 }
 
 task copySteps(type: Copy) {
@@ -34,6 +41,7 @@ task checkJRuby {
     Process proc = ["jruby", "-v"].execute()
     logger.info('>> stdout: '+proc.text)
     logger.info('>> stderr: '+proc.err.text)
+    proc.waitFor()
     if (proc.exitValue()) {
         throw new RuntimeException('Please install JRuby');
     }
@@ -44,22 +52,25 @@ task cukeLibs(dependsOn: checkJRuby) {
     Process check = ['ruby', '-e', '%w{rubygems cuke4duke rspec}.each{|i| require i}'].execute()
     logger.info('>> stdout: '+check.text)
     logger.info('>> stderr: '+check.err.text)
+    check.waitFor()
     if (check.exitValue()) {
         logger.info('exec: gem install cuke4duke rspec')
         Process install = ['gem', 'install', 'cuke4duke', 'rspec'].execute()
         logger.info('>> stdout: '+install.text)
         logger.info('>> stderr: '+install.err.text)
+        install.waitFor()
         if (install.exitValue()) {
             throw new RuntimeException('Please install cuke4duke')
         }
     }
 }
 
-task runFeatures(dependsOn: [compileJava, copySteps, testLibs, cukeLibs]) << {
-    Process proc = ["cuke4duke", 
+task runFeatures(dependsOn: [compileJava, copySteps, testLibs, cukeLibs, processTestResources]) << {
+    Process proc = ["jruby",
+        "-S", "cuke4duke",
         "--require", "$buildDir/classes/main/",
         "--require", "$buildDir/classes/test/",
-        "--jars", "$buildDir/testLibs", 
+        "--jars", "$buildDir/testLibs",
         "src/test/features/"].execute()
     proc.consumeProcessErrorStream(System.err)
     proc.consumeProcessOutputStream(System.out)

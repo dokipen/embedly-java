@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -13,59 +14,42 @@ class ApiParameters {
     private Map<String, ArrayList<String>> params;
 
     public ApiParameters() {
-        this.params = new HashMap<String, ArrayList<String>>();
+        params = new HashMap<String, ArrayList<String>>();
     }
 
-    public void pushToParam(String name, String value) {
-
+    public void push(String name, String value) {
+        ArrayList<String> param = getParam(name);
+        param.add(value);
     }
 
-    public void pushToParam(String name, String[] value) {
-
+    public void push(String name, String[] value) {
+        ArrayList<String> param = getParam(name);
+        param.addAll(Arrays.asList(value));
     }
 
-    public String toQuery() {
-        return "";
-    }
-
-    public void noop() {
-        /*
-        JSONArray resp = null;
-        try {
-            resp = new JSONArray("[]");
-            Object url = params.get("url");
-            String urls = null;
-            if (null != url) {
-                urls = URLEncoder.encode(""+url, "utf-8");
-            }
-            if (null == urls) {
-                ArrayList<String> encodedUrls = new ArrayList<String>();
-                for (Object i : (String[])params.get("urls")) {
-                    encodedUrls.add(URLEncoder.encode(""+i, "utf-8"));
-                }
-                urls = StringUtils.join(encodedUrls, ",");
-            }
-            HttpClient httpclient = new DefaultHttpClient();
-            String call = this.host+"/"+version+"/"+action+"?urls="+urls;
-            if (this.key != null) {
-                call = call+"&key="+this.key;
-            }
-            // System.out.println("calling: "+call);
-            HttpGet httpget = new HttpGet(call);
-            ResponseHandler<String> responseHandler = new BasicResponseHandler();
-            resp = new JSONArray(httpclient.execute(httpget, responseHandler));
-        } catch (JSONException e) {
-            // TODO: add more details of call and stack trace
-            throw new RuntimeException("Failed to parse JSON in response");
-        } catch (UnsupportedEncodingException e) {
-            // TODO: add more details of call and stack trace
-            throw new RuntimeException("Parameters couldn't be encoded with utf-8");
-        } catch (IOException e) {
-            // TODO: add more details of call and stack trace
-            throw new RuntimeException("HTTP call failed");
+    public ArrayList<String> getParam(String name) {
+        ArrayList<String> param = params.get(name);
+        if (param == null) {
+            param = new ArrayList<String>();
+            params.put(name, param);
         }
-        return resp;
-        */
+        return param;
+    }
+
+    public String toQuery() throws UnsupportedEncodingException {
+        ArrayList<String> query = new ArrayList<String>();
+        for (Map.Entry<String, ArrayList<String>> entry : params.entrySet()) {
+            String key = entry.getKey();
+            if ("url".equals(key)) {
+                key = "urls";
+            }
+            for (String value : entry.getValue()) {
+                query.add(URLEncoder.encode(key, "utf-8") + 
+                        "=" + URLEncoder.encode(value, "utf-8"));
+            }
+        }
+
+        return StringUtils.join(query, "&");
     }
 
     public String toString() {
