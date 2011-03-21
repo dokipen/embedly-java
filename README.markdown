@@ -8,15 +8,12 @@ http://api.embed.ly/docs.
 
 If you would like cutting edge, then you can clone and install HEAD.
 
-```bash
     git clone git@github.com:dokipen/embedly-java.git
     cd embedly-java
     gradle build
-```
 
 ## Getting Started
 
-```java
     /* demo.java */
 
     import java.util.HashMap;
@@ -61,14 +58,11 @@ If you would like cutting edge, then you can clone and install HEAD.
 
       }
     }
-```
 
 ## Testing
 
-```bash
     gradle test
     EMBEDLY_KEY=xxxxxxxxxxxxx gradle runFeatures
-```
 
 ## Note on Patches/Pull Requests
 
