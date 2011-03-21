@@ -1,18 +1,22 @@
 apply plugin: 'groovy'
 apply plugin: 'java'
 
+configurations {
+    runtime.exclude module: 'groovy'
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    groovy 'org.codehaus.groovy:groovy-all:1.7.6'
     compile 'org.json:json:20090211'
     compile 'org.apache.httpcomponents:httpclient:4.0-beta2'
     compile 'commons-lang:commons-lang:2.5'
     runtime 'org.json:json:20090211'
     runtime 'org.apache.httpcomponents:httpclient:4.0-beta2'
     runtime 'commons-lang:commons-lang:2.5'
+    testCompile 'org.codehaus.groovy:groovy-all:1.7.6'
     testCompile 'junit:junit:4.8.2'
     testCompile 'org.hamcrest:hamcrest-all:1.1'
     testRuntime 'org.picocontainer:picocontainer:2.13.2'
