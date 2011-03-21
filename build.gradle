@@ -25,6 +25,11 @@ dependencies {
     testRuntime 'org.hamcrest:hamcrest-all:1.1'
 }
 
+task sourceJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 task copySteps(type: Copy) {
     from 'src/test/jruby'
     into 'build/classes/test'
