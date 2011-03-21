@@ -32,6 +32,21 @@ class ApiTest {
         assertThat(urls.size(), is(2))
         assertThat(urls[0], is('http://mytestingsite.com/'))
         assertThat(urls[1], is('http://othertesting.com/'))
+
+        urls = [
+            "http://www.google.com/",
+            "http://www.yahoo.com/",
+            "http://twitter.com/"
+        ]
+
+        response = api.filterByServices(urls, regex)
+
+        assertThat(response.length(), is(3))
+        assertThat(response.getJSONObject(0), is(notNullValue()))
+        assertThat(response.getJSONObject(1), is(notNullValue()))
+        assertThat(response.getJSONObject(2), is(notNullValue()))
+
+        assertThat(urls.size(), is(0))
     }
 
     void shouldFillResponse() {

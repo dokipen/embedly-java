@@ -119,6 +119,7 @@ class Api {
             // TODO: add more details of call and stack trace
             throw new RuntimeException("HTTP call failed", e);
         }
+        log.debug("Returning >> "+resp);
         return resp;
     }
 
@@ -235,7 +236,7 @@ class Api {
         HttpGet httpget = new HttpGet(url);
         ResponseHandler<String> responseHandler = new BasicResponseHandler();
         String response = httpclient.execute(httpget, responseHandler);
-        //log.debug("response << "+response);
+        log.debug("response << "+response);
         return response;
     }
 

@@ -18,16 +18,19 @@ class ApiParameters {
     }
 
     public void push(String name, String value) {
+        name = filterName(name);
         ArrayList<String> param = getParam(name);
         param.add(value);
     }
 
     public void push(String name, String[] value) {
+        name = filterName(name);
         ArrayList<String> param = getParam(name);
         param.addAll(Arrays.asList(value));
     }
 
     public ArrayList<String> getParam(String name) {
+        name = filterName(name);
         ArrayList<String> param = params.get(name);
         if (param == null) {
             param = new ArrayList<String>();
@@ -36,13 +39,17 @@ class ApiParameters {
         return param;
     }
 
+    private String filterName(String name) {
+        if ("url".equals(name)) {
+            return "urls";
+        }
+        return name;
+    }
+
     public String toQuery() throws UnsupportedEncodingException {
         ArrayList<String> query = new ArrayList<String>();
         for (Map.Entry<String, ArrayList<String>> entry : params.entrySet()) {
             String key = entry.getKey();
-            if ("url".equals(key)) {
-                key = "urls";
-            }
             for (String value : entry.getValue()) {
                 query.add(URLEncoder.encode(key, "utf-8") + 
                         "=" + URLEncoder.encode(value, "utf-8"));
