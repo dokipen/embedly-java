@@ -16,6 +16,7 @@ dependencies {
     runtime 'org.json:json:20090211'
     runtime 'org.apache.httpcomponents:httpclient:4.0-beta2'
     runtime 'commons-lang:commons-lang:2.5'
+    groovy 'org.codehaus.groovy:groovy-all:1.7.6'
     testCompile 'org.codehaus.groovy:groovy-all:1.7.6'
     testCompile 'junit:junit:4.8.2'
     testCompile 'org.hamcrest:hamcrest-all:1.1'

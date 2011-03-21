@@ -2,6 +2,7 @@ package com.embedly.api
 
 import static org.hamcrest.MatcherAssert.*
 import static org.hamcrest.Matchers.*
+import static org.apache.commons.logging.LogFactory.getLog
 
 import org.junit.Test
 import java.util.regex.Pattern
@@ -10,6 +11,7 @@ import org.json.JSONArray
 class ApiTest {
     @Test
     void shouldFilterInvalidUrls() {
+        Api.setLog(getLog(Api.class));
         def api = new Api("embedly-java-junit")
         def regex = Pattern.compile('.*testing.*')
         def urls = [

@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
-import org.apache.commons.lang.StringUtils;
-
 class ApiParameters {
     private Map<String, ArrayList<String>> params;
 
@@ -56,10 +54,21 @@ class ApiParameters {
             }
         }
 
-        return StringUtils.join(query, "&");
+        return stringJoin(query, "&");
     }
 
     public String toString() {
         return "com.embedly.api.ApiParameters["+this.params+"]";
+    }
+
+    
+    private String stringJoin(ArrayList<String> parts, String seperator) {
+    	StringBuffer buffer = new StringBuffer();
+    	for (int i = 0; i < parts.size() - 1; ++i) {
+    		buffer.append(parts.get(i));
+    		buffer.append(seperator);
+    	}
+    	buffer.append(parts.get(parts.size() - 1));
+    	return buffer.toString();
     }
 }

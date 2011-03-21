@@ -2,16 +2,13 @@ package com.embedly.api;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,14 +20,27 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-class Api {
+public class Api {
     private String key;
     private String host;
     private String userAgent;
+    
+    private static Log noopLog = new Api.NoopLog();
 
-    private static Log log = LogFactory.getLog(Api.class);
+    private static Log log = null;
 
-    public Api(String userAgent) {
+    public static Log getLog() {
+    	if (log == null) {
+    	    return noopLog;
+    	}
+		return log;
+	}
+
+	public static void setLog(Log log) {
+		Api.log = log;
+	}
+
+	public Api(String userAgent) {
         this(userAgent, null, null);
     }
 
@@ -94,7 +104,7 @@ class Api {
                 query.push("key", key);
                 resp = filterByServices(urls, Pattern.compile(".*"));
             } else {
-                log.debug("checking urls against services");
+                getLog().debug("checking urls against services");
                 resp = filterByServices(urls, servicesPattern());
             }
 
@@ -106,20 +116,22 @@ class Api {
             }
 
         } catch (JSONException e) {
-            log.error("Failed to parse JSON in response", e);
+            getLog().error("Failed to parse JSON in response", e);
             // TODO: add more details of call and stack trace
             throw new RuntimeException("Failed to parse JSON in response", e);
         } catch (UnsupportedEncodingException e) {
-            log.error("Parameters couldn't be encoded with utf-8", e);
+        	getLog().error("Parameters couldn't be encoded with utf-8", e);
             // TODO: add more details of call and stack trace
             throw new RuntimeException(
                     "Parameters couldn't be encoded with utf-8", e);
         } catch (IOException e) {
-            log.error("HTTP call failed", e);
+        	getLog().error("HTTP call failed", e);
             // TODO: add more details of call and stack trace
             throw new RuntimeException("HTTP call failed", e);
         }
-        log.debug("Returning >> "+resp);
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Returning >> "+resp);
+        }
         return resp;
     }
 
@@ -133,16 +145,16 @@ class Api {
      */
     public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
                                                          throws JSONException {
-        log.debug("checking urls against services");
+    	getLog().debug("checking urls against services");
         JSONArray response = new JSONArray();
         for (int i = urls.size() - 1; i >= 0; --i) {
             String url = urls.get(i);
             Matcher match = regex.matcher(url);
             if (match.matches()) {
-                log.debug("url: "+url+" is valid");
+            	getLog().debug("url: "+url+" is valid");
                 response.put(i, (JSONObject)null);
             } else {
-                log.debug("url: "+url+" isn't valid");
+            	getLog().debug("url: "+url+" isn't valid");
                 response.put(i, new JSONObject("" +
                     "{ url: \""+url+"\"" +
                     ", error_code: \"401\"" +
@@ -166,10 +178,10 @@ class Api {
                 toFill.put(i, filler.getJSONObject(filler_index));
                 if (filler_index >= filler.length()) {
                     // This should _never_ happen
-                    log.error("we're on index "+filler_index+
+                	getLog().error("we're on index "+filler_index+
                             " but real_resp only has "+
                             filler.length()+" members.");
-                    log.debug("Current response: "+toFill.toString());
+                	getLog().debug("Current response: "+toFill.toString());
                     throw new RuntimeException("Something went " +
                             "terribly wrong parsing the response");
                 }
@@ -185,18 +197,18 @@ class Api {
             resp = new JSONArray("[]");
 
             if (key != null) {
-                log.error("Pro doesn't support services");
+            	getLog().error("Pro doesn't support services");
                 throw new RuntimeException("Pro doesn't support services");
             }
 
             String call = this.host+"/1/services/javascript";
             resp = new JSONArray(simpleHTTP(call, null));
         } catch (JSONException e) {
-            log.error("Failed to parse JSON in response", e);
+        	getLog().error("Failed to parse JSON in response", e);
             // TODO: add more details of call and stack trace
             throw new RuntimeException("Failed to parse JSON in response", e);
         } catch (IOException e) {
-            log.error("HTTP call failed", e);
+        	getLog().error("HTTP call failed", e);
             // TODO: add more details of call and stack trace
             throw new RuntimeException("HTTP call failed", e);
         }
@@ -214,15 +226,15 @@ class Api {
                     regexList.add(regexes.getString(j));
                 }
             }
-            Pattern ret = Pattern.compile(StringUtils.join(regexList, "|"));
+            Pattern ret = Pattern.compile(stringJoin(regexList, "|"));
             return ret;
         } catch (PatternSyntaxException e) {
-            log.error("Unexpected issue with services response", e);
+        	getLog().error("Unexpected issue with services response", e);
             // TODO: add more details of exception and stack trace
             throw new RuntimeException(
                     "Unexpected issue with services response", e);
         } catch (JSONException e) {
-            log.error("Unexpected issue with services response", e);
+        	getLog().error("Unexpected issue with services response", e);
             // TODO: add more details of exception and stack trace
             throw new RuntimeException(
                     "Unexpected issue with services response", e);
@@ -232,11 +244,13 @@ class Api {
     private String simpleHTTP(String url, Map<String, String> headers)
                                                        throws IOException {
         HttpClient httpclient = new DefaultHttpClient();
-        log.debug("calling  >> "+url);
+        getLog().debug("calling  >> "+url);
         HttpGet httpget = new HttpGet(url);
         ResponseHandler<String> responseHandler = new BasicResponseHandler();
         String response = httpclient.execute(httpget, responseHandler);
-        log.debug("response << "+response);
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("response << "+response);
+        }
         return response;
     }
 
@@ -244,4 +258,35 @@ class Api {
         return "com.embedly.api.Api[key="+key+",host="+host+",userAgent="+
             userAgent+"]";
     }
+    
+    private String stringJoin(ArrayList<String> parts, String seperator) {
+    	StringBuffer buffer = new StringBuffer();
+    	for (int i = 0; i < parts.size() - 1; ++i) {
+    		buffer.append(parts.get(i));
+    		buffer.append(seperator);
+    	}
+    	buffer.append(parts.get(parts.size() - 1));
+    	return buffer.toString();
+    }
+    
+    private static class NoopLog implements Log {
+		public void debug(Object arg0) {}
+		public void debug(Object arg0, Throwable arg1) {}
+		public void error(Object arg0) {}
+		public void error(Object arg0, Throwable arg1) {}
+		public void fatal(Object arg0) {}
+		public void fatal(Object arg0, Throwable arg1) {}
+		public void info(Object arg0) {}
+		public void info(Object arg0, Throwable arg1) {}
+		public boolean isDebugEnabled() {return false;}
+		public boolean isErrorEnabled() {return false;}
+		public boolean isFatalEnabled() {return false;}
+		public boolean isInfoEnabled() {return false;}
+		public boolean isTraceEnabled() {return false;}
+		public boolean isWarnEnabled() {return false;}
+		public void trace(Object arg0) {}
+		public void trace(Object arg0, Throwable arg1) {}
+		public void warn(Object arg0) {}
+		public void warn(Object arg0, Throwable arg1) {}
+	}
 }

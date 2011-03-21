@@ -3,6 +3,7 @@ require 'rubygems'
 require 'json'
 require 'rspec/expectations'
 include_class 'com.embedly.api.Api'
+include_class 'org.apache.commons.logging.LogFactory'
 
 USER_AGENT = 'embedly-java-cucumber'
 
@@ -12,6 +13,7 @@ Given /^an embedly host( [^\s]+)?( with key)?$/ do |host, key_enabled|
     key = ENV['EMBEDLY_KEY']
     raise 'Please set env variable $EMBEDLY_KEY' unless key
   end
+  Api.setLog(LogFactory.getLog('com.embedly.api.Api'))
   @api = Api.new(USER_AGENT, key, host)
 end
 
