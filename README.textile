@@ -9,65 +9,65 @@ http://api.embed.ly/docs.
 If you would like cutting edge, then you can clone and install HEAD.
 
 ```bash
-git clone git@github.com:dokipen/embedly-java.git
-cd embedly-java
-gradle build
+    git clone git@github.com:dokipen/embedly-java.git
+    cd embedly-java
+    gradle build
 ```
 
 ## Getting Started
 
 ```java
-/* demo.java */
+    /* demo.java */
 
-import java.util.HashMap;
+    import java.util.HashMap;
 
-import org.json.JSONArray;
+    import org.json.JSONArray;
 
-import org.apache.commons.logging.LogFactory;
+    import org.apache.commons.logging.LogFactory;
 
-import com.embedly.api.Api;
+    import com.embedly.api.Api;
 
-public class Demo {
-  public static void main(String[] args) {
-      Api.setLog(LogFactory.getLog(Api.class));
-      Api api = new API('Mozilla/5.0 (compatible; mytestapp/1.0; my@email.com)');
+    public class Demo {
+      public static void main(String[] args) {
+          Api.setLog(LogFactory.getLog(Api.class));
+          Api api = new API('Mozilla/5.0 (compatible; mytestapp/1.0; my@email.com)');
 
-      HashMap<String, Object> params = new HashMap<String, Object>();
-      params.put('url', 'http://www.youtube.com/watch?v=sPbJ4Z5D-n4&feature=topvideos');
+          HashMap<String, Object> params = new HashMap<String, Object>();
+          params.put('url', 'http://www.youtube.com/watch?v=sPbJ4Z5D-n4&feature=topvideos');
 
-      JSONArray json = api.oembed(params);
-      System.out.println(""+json);
+          JSONArray json = api.oembed(params);
+          System.out.println(""+json);
 
-      System.out.println("------------------------------------------------------");
+          System.out.println("------------------------------------------------------");
 
-      ArrayList<String> urls = new ArrayList<String>();
-      urls.add('http://www.youtube.com/watch?v=sPbJ4Z5D-n4&feature=topvideos');
-      urls.add('http://twitpic.com/3yr7hk');
-      params = new HashMap<String, Object>();
-      params.put('urls', urls);
+          ArrayList<String> urls = new ArrayList<String>();
+          urls.add('http://www.youtube.com/watch?v=sPbJ4Z5D-n4&feature=topvideos');
+          urls.add('http://twitpic.com/3yr7hk');
+          params = new HashMap<String, Object>();
+          params.put('urls', urls);
 
-      JSONArray json = api.oembed(params);
-      System.out.println(""+json);
+          JSONArray json = api.oembed(params);
+          System.out.println(""+json);
 
-      System.out.println("------------------------------------------------------");
+          System.out.println("------------------------------------------------------");
 
-      api = new Api('Mozilla/5.0 (compatible; mytestapp/1.0; my@email.com)',
-                    'xxxxxxxxxxxxxxxxxxxxxxxxxxx'); // <-- put key here
-      params = new HashMap<String, Object>();
-      params.put('url', 'http://www.guardian.co.uk/media/2011/jan/21/andy-coulson-phone-hacking-statement');
+          api = new Api('Mozilla/5.0 (compatible; mytestapp/1.0; my@email.com)',
+                        'xxxxxxxxxxxxxxxxxxxxxxxxxxx'); // <-- put key here
+          params = new HashMap<String, Object>();
+          params.put('url', 'http://www.guardian.co.uk/media/2011/jan/21/andy-coulson-phone-hacking-statement');
 
-      JSONArray json = api.oembed(params);
-      System.out.println(""+json);
+          JSONArray json = api.oembed(params);
+          System.out.println(""+json);
 
-  }
-}
+      }
+    }
 ```
 
 ## Testing
 
 ```bash
-gradle test
-EMBEDLY_KEY=xxxxxxxxxxxxx gradle runFeatures
+    gradle test
+    EMBEDLY_KEY=xxxxxxxxxxxxx gradle runFeatures
 ```
 
 ## Note on Patches/Pull Requests
