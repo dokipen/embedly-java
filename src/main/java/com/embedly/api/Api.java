@@ -24,6 +24,9 @@ public class Api {
     private String key;
     private String host;
     private String userAgent;
+
+    private HttpClient _httpClient;
+    private ResponseHandler<String> _responseHandler;
     
     private static Log noopLog = new Api.NoopLog();
 
@@ -64,6 +67,10 @@ public class Api {
         } else if (this.host == null) {
             this.host = "http://pro.embed.ly";
         }
+
+        // prime these
+        getHttpClient();
+        getResponseHandler();
     }
 
     public JSONArray oembed(Map<String, Object> params) {
@@ -241,13 +248,25 @@ public class Api {
         }
     }
 
+    private HttpClient getHttpClient() {
+        if (_httpClient == null) {
+            _httpClient = new DefaultHttpClient();
+        }
+        return _httpClient;
+    }
+
+    private ResponseHandler<String> getResponseHandler() {
+        if (_responseHandler == null) {
+            _responseHandler = new BasicResponseHandler();
+        }
+        return _responseHandler;
+    }
+
     private String simpleHTTP(String url, Map<String, String> headers)
                                                        throws IOException {
-        HttpClient httpclient = new DefaultHttpClient();
         getLog().debug("calling  >> "+url);
         HttpGet httpget = new HttpGet(url);
-        ResponseHandler<String> responseHandler = new BasicResponseHandler();
-        String response = httpclient.execute(httpget, responseHandler);
+        String response = getHttpClient().execute(httpget, getResponseHandler());
         if (getLog().isDebugEnabled()) {
             getLog().debug("response << "+response);
         }
