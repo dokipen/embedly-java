@@ -114,7 +114,7 @@ public class Api {
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          @see {@link https://pro.embed.ly/docs/oembed}
+     *          {@link https://pro.embed.ly/docs/oembed}
      */
     public JSONArray oembed(Map<String, Object> params) {
         return this.apicall("1", "oembed", params);
@@ -128,7 +128,7 @@ public class Api {
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          @see {@link https://pro.embed.ly/docs/objectify}
+     *          {@link https://pro.embed.ly/docs/objectify}
      */
     public JSONArray objectify(Map<String, Object> params) {
         return this.apicall("2", "objectify", params);
@@ -142,7 +142,7 @@ public class Api {
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          @see {@link https://pro.embed.ly/docs/preview}
+     *          {@link https://pro.embed.ly/docs/preview}
      */
     public JSONArray preview(Map<String, Object> params) {
         return this.apicall("1", "preview", params);
@@ -162,7 +162,7 @@ public class Api {
      *                valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          @see {@link https://pro.embed.ly/docs/}
+     *          {@link https://pro.embed.ly/docs/}
      */
     public JSONArray apicall(String version, String action,
             Map<String, Object> params) {
@@ -200,16 +200,13 @@ public class Api {
 
         } catch (JSONException e) {
             getLog().error("Failed to parse JSON in response", e);
-            // TODO: add more details of call and stack trace
             throw new RuntimeException("Failed to parse JSON in response", e);
         } catch (UnsupportedEncodingException e) {
         	getLog().error("Parameters couldn't be encoded with utf-8", e);
-            // TODO: add more details of call and stack trace
             throw new RuntimeException(
                     "Parameters couldn't be encoded with utf-8", e);
         } catch (IOException e) {
         	getLog().error("HTTP call failed", e);
-            // TODO: add more details of call and stack trace
             throw new RuntimeException("HTTP call failed", e);
         }
         if (getLog().isDebugEnabled()) {
@@ -297,7 +294,7 @@ public class Api {
      * Returns a JSON array from the API services endpoint.  This method
      * is only applicable to API hosts.
      *
-     * @return JSONArray of services @see {@link http://api.embed.ly/docs/service}
+     * @return JSONArray of services {@link http://api.embed.ly/docs/service}
      */
     public JSONArray services() {
         JSONArray resp = null;
@@ -314,11 +311,9 @@ public class Api {
             resp = new JSONArray(simpleHTTP(call, null));
         } catch (JSONException e) {
         	getLog().error("Failed to parse JSON in response", e);
-            // TODO: add more details of call and stack trace
             throw new RuntimeException("Failed to parse JSON in response", e);
         } catch (IOException e) {
         	getLog().error("HTTP call failed", e);
-            // TODO: add more details of call and stack trace
             throw new RuntimeException("HTTP call failed", e);
         }
         return resp;
@@ -345,12 +340,10 @@ public class Api {
             return ret;
         } catch (PatternSyntaxException e) {
         	getLog().error("Unexpected issue with services response", e);
-            // TODO: add more details of exception and stack trace
             throw new RuntimeException(
                     "Unexpected issue with services response", e);
         } catch (JSONException e) {
         	getLog().error("Unexpected issue with services response", e);
-            // TODO: add more details of exception and stack trace
             throw new RuntimeException(
                     "Unexpected issue with services response", e);
         }
