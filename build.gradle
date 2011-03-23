@@ -1,8 +1,19 @@
 apply plugin: 'groovy'
 apply plugin: 'java'
+apply plugin: 'maven'
+
+version = '0.1.0'
 
 configurations {
     runtime.exclude module: 'groovy'
+}
+
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        version '0.1.0'
+        artifactId 'embedly-api'
+        groupId 'com.embedly'
+    }
 }
 
 repositories {
@@ -26,8 +37,6 @@ dependencies {
     testRuntime 'org.hamcrest:hamcrest-all:1.1'
 }
 
-version = '0.1.0'
-
 jar {
     manifest {
         attributes 'Specification-Title': 'Embedly Java Client',
@@ -40,8 +49,11 @@ jar {
 }
 
 uploadArchives {
-    repositories {
-        flatDir(dirs: file('repos'))
+    repositories.mavenDeployer {
+        repository(url: "file:///home/doki_pen/tmp/myRepo/")
+        pom.project {
+            groupId 'com.embedly'
+        }
     }
 }
 
