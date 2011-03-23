@@ -20,6 +20,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+/**
+ * Api is used to access the Embedly API and Pro endpoints.
+ */
 public class Api {
     private String key;
     private String host;
@@ -28,6 +31,14 @@ public class Api {
     private HttpClient _httpClient;
     private ResponseHandler<String> _responseHandler;
     
+    /**
+     * We use this somewhat strange pattern for logging so things will
+     * work on Android, which doesn't provide LogFactory in it's platform.
+     *
+     * To enable logging, do something like this before using the Api class::
+     *
+     *     Api.setLog(LogFactory.getLog(Api.class));
+     */
     private static Log noopLog = new Api.NoopLog();
 
     private static Log log = null;
@@ -51,6 +62,28 @@ public class Api {
         this(userAgent, key, null);
     }
 
+    /**
+     * The Api object is used to access both Embedly API
+     * and Embedly Pro.  When a key is used, the Pro endpoints
+     * oembed, preview and objectify are available.  When no
+     * key is used, the API endpoints services and oembed are
+     * available.
+     *
+     * A userAgent containing, at the very least, a contact
+     * email address for the client applications operator.  This
+     * is used so that Embedly can contact the client in the case
+     * of any issues or improper use.  Your client may be blocked
+     * by embedly if a contact address is not provided.
+     *
+     * ex. "Mozilla/5.0 (compatible; myapp/1.0; +my@email.com)
+     *
+     * @param userAgent A userAgent string containing contact information
+     *
+     * @param key       Your Embedly PRO key
+     * 
+     * @param host      An alternative hostname, used for debugging.  
+     *                  ex. "http://localhost"
+     */
     public Api(String userAgent, String key, String host) {
         this.userAgent = userAgent;
         this.key = key;
@@ -73,20 +106,63 @@ public class Api {
         getResponseHandler();
     }
 
+    /**
+     * Call the oembed endpoint.  Valid for both API and Pro instances.
+     *
+     * @param params A map of name value pairs.  The value should be either
+     *               a String, or a String[].  At this time, String[] is only
+     *               valid for the "urls" parameter.
+     *
+     * @returns JSONArray of JSONObjects.  
+     *          @see {@link https://pro.embed.ly/docs/oembed}
+     */
     public JSONArray oembed(Map<String, Object> params) {
         return this.apicall("1", "oembed", params);
     }
 
+    /**
+     * Call the objectify endpoint.  Valid for Pro instances.
+     *
+     * @param params A map of name value pairs.  The value should be either
+     *               a String, or a String[].  At this time, String[] is only
+     *               valid for the "urls" parameter.
+     *
+     * @returns JSONArray of JSONObjects.  
+     *          @see {@link https://pro.embed.ly/docs/objectify}
+     */
     public JSONArray objectify(Map<String, Object> params) {
         return this.apicall("2", "objectify", params);
     }
 
+    /**
+     * Call the preview endpoint.  Valid for Pro instances.
+     *
+     * @param params A map of name value pairs.  The value should be either
+     *               a String, or a String[].  At this time, String[] is only
+     *               valid for the "urls" parameter.
+     *
+     * @returns JSONArray of JSONObjects.  
+     *          @see {@link https://pro.embed.ly/docs/preview}
+     */
     public JSONArray preview(Map<String, Object> params) {
         return this.apicall("1", "preview", params);
     }
 
     /**
-     * params values should be something that has toString, or a String[]
+     * Generic Embedly endpoint call.  This shouldn't be called directly, but
+     * is used internally by the oembed, objectify and preview endpoint
+     * methods.
+     *
+     * @param version Endpoint version
+     * 
+     * @param action  Endpoint name
+     *
+     * @param params  A map of name value pairs.  The value should be either
+     *                a String, or a String[].  At this time, String[] is only
+     *                valid for the "urls" parameter.
+     *
+     * @returns JSONArray of JSONObjects.  
+     *          @see {@link https://pro.embed.ly/docs/}
      */
     public JSONArray apicall(String version, String action,
             Map<String, Object> params) {
@@ -143,12 +219,23 @@ public class Api {
     }
 
     /**
-     * Filters invalid urls and prepares a JSONArray for response.
+     * Filters invalid urls and prepares a JSONArray for response.  This is
+     * used internally by apicall and should not be called directly.
+     * 
+     * SIDE EFFECT WARNING! This method modifies the urls parameter!
      *
      * The JSON array will have null values where responses will be inserted
      * and 401 responses where urls were invalid.  After calling the embedly
      * api, you can fill in the null values with the responses in the order
      * they come back in.
+     *
+     * @param urls     An ArrayList<String> of urls to check.  This will be
+     *                 stripped of invalid urls.
+     *
+     * @param regex    A pattern to check urls against
+     *
+     * @returns        A JSONArray with 401 error responses filled in for
+     *                 invalid urls.
      */
     public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
                                                          throws JSONException {
@@ -177,6 +264,15 @@ public class Api {
         return response;
     }
 
+    /**
+     * Takes a JSONArray with empty place holders and fills it with filler.
+     *
+     * This method modifies toFill
+     *
+     * @param toFill  JSONArray will null values where values should be written
+     *
+     * @param filler  JSONArray with values that will be written to toFill
+     */
     public void fillResponse(JSONArray toFill, JSONArray filler)
                                                 throws JSONException {
         int filler_index = 0;
@@ -197,6 +293,12 @@ public class Api {
         }
     }
 
+    /**
+     * Returns a JSON array from the API services endpoint.  This method
+     * is only applicable to API hosts.
+     *
+     * @returns JSONArray of services @see {@link http://api.embed.ly/docs/service}
+     */
     public JSONArray services() {
         JSONArray resp = null;
         try {
@@ -222,6 +324,12 @@ public class Api {
         return resp;
     }
 
+    /**
+     * Returns a pattern object to match against URLs.  This method is only
+     * applicable to API hosts, since Pro accepts any URL.
+     *
+     * @returns Pattern for URLs valid on API endpoints
+     */
     public Pattern servicesPattern() {
         try {
             JSONArray services = services();
