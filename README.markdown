@@ -76,4 +76,4 @@ If you would like cutting edge, then you can clone and install HEAD.
 
 ## Copyright
 
-Copyright (c) 2011 Embed.ly, Inc. See MIT-LICENSE for details.
+Copyright (c) 2011 Embed.ly, Inc. See LICENSE for details.
