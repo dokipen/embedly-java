@@ -14,7 +14,7 @@ If you would like cutting edge, then you can clone and install HEAD.
 
 ## Getting Started
 
-    /* demo.java */
+    /* Demo.java */
 
     import java.util.HashMap;
 
