@@ -207,8 +207,6 @@ public class Api {
     }
 
     /**
-     * @exclude
-     *
      * Generic Embedly endpoint call.  This shouldn't be called directly, but
      * is used internally by the oembed, objectify and preview endpoint
      * methods.
@@ -225,7 +223,7 @@ public class Api {
      *
      * @return JSONArray of JSONObjects.  
      */
-    public JSONArray apicall(String version, String action,
+    private JSONArray apicall(String version, String action,
             Map<String, Object> params) {
         JSONArray resp = null;
         try {
@@ -277,8 +275,6 @@ public class Api {
     }
 
     /**
-     * @exclude
-     *
      * Filters invalid urls and prepares a JSONArray for response.  This is
      * used internally by apicall and should not be called directly.
      * 
@@ -297,7 +293,7 @@ public class Api {
      * @return        A JSONArray with 401 error responses filled in for
      *                 invalid urls.
      */
-    public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
+    JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
                                                          throws JSONException {
     	getLog().debug("checking urls against services");
         JSONArray response = new JSONArray();
@@ -325,8 +321,6 @@ public class Api {
     }
 
     /**
-     * @exclude
-     *
      * Takes a JSONArray with empty place holders and fills it with filler.
      *
      * This method modifies toFill
@@ -335,7 +329,7 @@ public class Api {
      *
      * @param filler  JSONArray with values that will be written to toFill
      */
-    public void fillResponse(JSONArray toFill, JSONArray filler)
+    void fillResponse(JSONArray toFill, JSONArray filler)
                                                 throws JSONException {
         int filler_index = 0;
         for (int i = 0; i < toFill.length(); ++i) {
@@ -371,17 +365,11 @@ public class Api {
      * Set log.  Try Api.setLog(LogFactory.getLog(Api.class));
      *
      * We do this instead of just setting in statically for android's sake.
-     *
-     * @return Log
      */
 	public static void setLog(Log log) {
 		Api.log = log;
 	}
 
-    
-    /**
-     * @exclude
-     */
     private String stringJoin(ArrayList<String> parts, String seperator) {
     	StringBuffer buffer = new StringBuffer();
     	for (int i = 0; i < parts.size() - 1; ++i) {
@@ -392,9 +380,6 @@ public class Api {
     	return buffer.toString();
     }
     
-    /**
-     * @exclude
-     */
     private HttpClient getHttpClient() {
         if (_httpClient == null) {
             _httpClient = new DefaultHttpClient();
@@ -402,9 +387,6 @@ public class Api {
         return _httpClient;
     }
 
-    /**
-     * @exclude
-     */
     private ResponseHandler<String> getResponseHandler() {
         if (_responseHandler == null) {
             _responseHandler = new BasicResponseHandler();
@@ -412,9 +394,6 @@ public class Api {
         return _responseHandler;
     }
 
-    /**
-     * @exclude
-     */
     private String simpleHTTP(String url, Map<String, String> headers)
                                                        throws IOException {
         getLog().debug("calling  >> "+url);
@@ -426,9 +405,6 @@ public class Api {
         return response;
     }
 
-    /**
-     * @exclude
-     */
     private static class NoopLog implements Log {
 		public void debug(Object arg0) {}
 		public void debug(Object arg0, Throwable arg1) {}
