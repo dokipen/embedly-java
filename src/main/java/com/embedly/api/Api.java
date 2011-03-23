@@ -43,17 +43,6 @@ public class Api {
 
     private static Log log = null;
 
-    public static Log getLog() {
-    	if (log == null) {
-    	    return noopLog;
-    	}
-		return log;
-	}
-
-	public static void setLog(Log log) {
-		Api.log = log;
-	}
-
 	public Api(String userAgent) {
         this(userAgent, null, null);
     }
@@ -108,13 +97,14 @@ public class Api {
 
     /**
      * Call the oembed endpoint.  Valid for both API and Pro instances.
+     * 
+     * <a target="_top" href="https://pro.embed.ly/docs/oembed">Embedly Oembed Docs</a>
      *
      * @param params A map of name value pairs.  The value should be either
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          {@link https://pro.embed.ly/docs/oembed}
      */
     public JSONArray oembed(Map<String, Object> params) {
         return this.apicall("1", "oembed", params);
@@ -123,12 +113,13 @@ public class Api {
     /**
      * Call the objectify endpoint.  Valid for Pro instances.
      *
+     * <a target="_top" href="https://pro.embed.ly/docs/objectify">Embedly Objectify Docs</a>
+     *
      * @param params A map of name value pairs.  The value should be either
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          {@link https://pro.embed.ly/docs/objectify}
      */
     public JSONArray objectify(Map<String, Object> params) {
         return this.apicall("2", "objectify", params);
@@ -137,164 +128,25 @@ public class Api {
     /**
      * Call the preview endpoint.  Valid for Pro instances.
      *
+     * <a target="_top" href="https://pro.embed.ly/docs/preview">Embedly Preview Docs</a>
+     *          
      * @param params A map of name value pairs.  The value should be either
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
      * @return JSONArray of JSONObjects.  
-     *          {@link https://pro.embed.ly/docs/preview}
      */
     public JSONArray preview(Map<String, Object> params) {
         return this.apicall("1", "preview", params);
     }
 
     /**
-     * Generic Embedly endpoint call.  This shouldn't be called directly, but
-     * is used internally by the oembed, objectify and preview endpoint
-     * methods.
-     *
-     * @param version Endpoint version
-     * 
-     * @param action  Endpoint name
-     *
-     * @param params  A map of name value pairs.  The value should be either
-     *                a String, or a String[].  At this time, String[] is only
-     *                valid for the "urls" parameter.
-     *
-     * @return JSONArray of JSONObjects.  
-     *          {@link https://pro.embed.ly/docs/}
-     */
-    public JSONArray apicall(String version, String action,
-            Map<String, Object> params) {
-        JSONArray resp = null;
-        try {
-            // fail safe response
-            resp = new JSONArray("[]");
-
-            ApiParameters query = new ApiParameters();
-            for (Map.Entry<String, Object> entry : params.entrySet()) {
-                if (entry.getValue() instanceof String[]) {
-                    query.push(entry.getKey().toString(),
-                            (String[])entry.getValue());
-                } else {
-                    query.push(entry.getKey().toString(),
-                            entry.getValue().toString());
-                }
-            }
-
-            ArrayList<String> urls = query.getParam("urls");
-            if (key != null) {
-                query.push("key", key);
-                resp = filterByServices(urls, Pattern.compile(".*"));
-            } else {
-                getLog().debug("checking urls against services");
-                resp = filterByServices(urls, servicesPattern());
-            }
-
-            if (urls.size() > 0) {
-                String call = this.host+"/"+version+"/"+action+"?"+
-                    query.toQuery();
-                String json_text = simpleHTTP(call, null);
-                fillResponse(resp, new JSONArray(json_text));
-            }
-
-        } catch (JSONException e) {
-            getLog().error("Failed to parse JSON in response", e);
-            throw new RuntimeException("Failed to parse JSON in response", e);
-        } catch (UnsupportedEncodingException e) {
-        	getLog().error("Parameters couldn't be encoded with utf-8", e);
-            throw new RuntimeException(
-                    "Parameters couldn't be encoded with utf-8", e);
-        } catch (IOException e) {
-        	getLog().error("HTTP call failed", e);
-            throw new RuntimeException("HTTP call failed", e);
-        }
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("Returning >> "+resp);
-        }
-        return resp;
-    }
-
-    /**
-     * Filters invalid urls and prepares a JSONArray for response.  This is
-     * used internally by apicall and should not be called directly.
-     * 
-     * SIDE EFFECT WARNING! This method modifies the urls parameter!
-     *
-     * The JSON array will have null values where responses will be inserted
-     * and 401 responses where urls were invalid.  After calling the embedly
-     * api, you can fill in the null values with the responses in the order
-     * they come back in.
-     *
-     * @param urls     An ArrayList<String> of urls to check.  This will be
-     *                 stripped of invalid urls.
-     *
-     * @param regex    A pattern to check urls against
-     *
-     * @return        A JSONArray with 401 error responses filled in for
-     *                 invalid urls.
-     */
-    public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
-                                                         throws JSONException {
-    	getLog().debug("checking urls against services");
-        JSONArray response = new JSONArray();
-        for (int i = urls.size() - 1; i >= 0; --i) {
-            String url = urls.get(i);
-            Matcher match = regex.matcher(url);
-            if (match.matches()) {
-            	getLog().debug("url: "+url+" is valid");
-                response.put(i, (JSONObject)null);
-            } else {
-            	getLog().debug("url: "+url+" isn't valid");
-                response.put(i, new JSONObject("" +
-                    "{ url: \""+url+"\"" +
-                    ", error_code: \"401\"" +
-                    ", error_message: \"This service requires an Embedly Pro" +
-                                       " account\"" +
-                    ", type: \"error\"" +
-                    ", version: \"1.0\"" +
-                    "}"
-                ));
-                urls.remove(i);
-            }
-        }
-        return response;
-    }
-
-    /**
-     * Takes a JSONArray with empty place holders and fills it with filler.
-     *
-     * This method modifies toFill
-     *
-     * @param toFill  JSONArray will null values where values should be written
-     *
-     * @param filler  JSONArray with values that will be written to toFill
-     */
-    public void fillResponse(JSONArray toFill, JSONArray filler)
-                                                throws JSONException {
-        int filler_index = 0;
-        for (int i = 0; i < toFill.length(); ++i) {
-            if (toFill.isNull(i)) {
-                toFill.put(i, filler.getJSONObject(filler_index));
-                if (filler_index >= filler.length()) {
-                    // This should _never_ happen
-                	getLog().error("we're on index "+filler_index+
-                            " but real_resp only has "+
-                            filler.length()+" members.");
-                	getLog().debug("Current response: "+toFill.toString());
-                    throw new RuntimeException("Something went " +
-                            "terribly wrong parsing the response");
-                }
-                filler_index++;
-            }
-        }
-    }
-
-    /**
      * Returns a JSON array from the API services endpoint.  This method
      * is only applicable to API hosts.
+     * 
+     * <a target="_top" href="http://api.embed.ly/docs/service">Embedly Services Docs</a>
      *
-     * @return JSONArray of services {@link http://api.embed.ly/docs/service}
+     * @return JSONArray of services 
      */
     public JSONArray services() {
         JSONArray resp = null;
@@ -349,6 +201,200 @@ public class Api {
         }
     }
 
+    public String toString() {
+        return "com.embedly.api.Api[key="+key+",host="+host+",userAgent="+
+            userAgent+"]";
+    }
+
+    /**
+     * @exclude
+     *
+     * Generic Embedly endpoint call.  This shouldn't be called directly, but
+     * is used internally by the oembed, objectify and preview endpoint
+     * methods.
+     *
+     * <a target="_top" href="https://pro.embed.ly/docs/">Embedly Docs</a>
+     *
+     * @param version Endpoint version
+     * 
+     * @param action  Endpoint name
+     *
+     * @param params  A map of name value pairs.  The value should be either
+     *                a String, or a String[].  At this time, String[] is only
+     *                valid for the "urls" parameter.
+     *
+     * @return JSONArray of JSONObjects.  
+     */
+    public JSONArray apicall(String version, String action,
+            Map<String, Object> params) {
+        JSONArray resp = null;
+        try {
+            // fail safe response
+            resp = new JSONArray("[]");
+
+            ApiParameters query = new ApiParameters();
+            for (Map.Entry<String, Object> entry : params.entrySet()) {
+                if (entry.getValue() instanceof String[]) {
+                    query.push(entry.getKey().toString(),
+                            (String[])entry.getValue());
+                } else {
+                    query.push(entry.getKey().toString(),
+                            entry.getValue().toString());
+                }
+            }
+
+            ArrayList<String> urls = query.getParam("urls");
+            if (key != null) {
+                query.push("key", key);
+                resp = filterByServices(urls, Pattern.compile(".*"));
+            } else {
+                getLog().debug("checking urls against services");
+                resp = filterByServices(urls, servicesPattern());
+            }
+
+            if (urls.size() > 0) {
+                String call = this.host+"/"+version+"/"+action+"?"+
+                    query.toQuery();
+                String json_text = simpleHTTP(call, null);
+                fillResponse(resp, new JSONArray(json_text));
+            }
+
+        } catch (JSONException e) {
+            getLog().error("Failed to parse JSON in response", e);
+            throw new RuntimeException("Failed to parse JSON in response", e);
+        } catch (UnsupportedEncodingException e) {
+        	getLog().error("Parameters couldn't be encoded with utf-8", e);
+            throw new RuntimeException(
+                    "Parameters couldn't be encoded with utf-8", e);
+        } catch (IOException e) {
+        	getLog().error("HTTP call failed", e);
+            throw new RuntimeException("HTTP call failed", e);
+        }
+        if (getLog().isDebugEnabled()) {
+            getLog().debug("Returning >> "+resp);
+        }
+        return resp;
+    }
+
+    /**
+     * @exclude
+     *
+     * Filters invalid urls and prepares a JSONArray for response.  This is
+     * used internally by apicall and should not be called directly.
+     * 
+     * SIDE EFFECT WARNING! This method modifies the urls parameter!
+     *
+     * The JSON array will have null values where responses will be inserted
+     * and 401 responses where urls were invalid.  After calling the embedly
+     * api, you can fill in the null values with the responses in the order
+     * they come back in.
+     *
+     * @param urls     An ArrayList<String> of urls to check.  This will be
+     *                 stripped of invalid urls.
+     *
+     * @param regex    A pattern to check urls against
+     *
+     * @return        A JSONArray with 401 error responses filled in for
+     *                 invalid urls.
+     */
+    public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
+                                                         throws JSONException {
+    	getLog().debug("checking urls against services");
+        JSONArray response = new JSONArray();
+        for (int i = urls.size() - 1; i >= 0; --i) {
+            String url = urls.get(i);
+            Matcher match = regex.matcher(url);
+            if (match.matches()) {
+            	getLog().debug("url: "+url+" is valid");
+                response.put(i, (JSONObject)null);
+            } else {
+            	getLog().debug("url: "+url+" isn't valid");
+                response.put(i, new JSONObject("" +
+                    "{ url: \""+url+"\"" +
+                    ", error_code: \"401\"" +
+                    ", error_message: \"This service requires an Embedly Pro" +
+                                       " account\"" +
+                    ", type: \"error\"" +
+                    ", version: \"1.0\"" +
+                    "}"
+                ));
+                urls.remove(i);
+            }
+        }
+        return response;
+    }
+
+    /**
+     * @exclude
+     *
+     * Takes a JSONArray with empty place holders and fills it with filler.
+     *
+     * This method modifies toFill
+     *
+     * @param toFill  JSONArray will null values where values should be written
+     *
+     * @param filler  JSONArray with values that will be written to toFill
+     */
+    public void fillResponse(JSONArray toFill, JSONArray filler)
+                                                throws JSONException {
+        int filler_index = 0;
+        for (int i = 0; i < toFill.length(); ++i) {
+            if (toFill.isNull(i)) {
+                toFill.put(i, filler.getJSONObject(filler_index));
+                if (filler_index >= filler.length()) {
+                    // This should _never_ happen
+                	getLog().error("we're on index "+filler_index+
+                            " but real_resp only has "+
+                            filler.length()+" members.");
+                	getLog().debug("Current response: "+toFill.toString());
+                    throw new RuntimeException("Something went " +
+                            "terribly wrong parsing the response");
+                }
+                filler_index++;
+            }
+        }
+    }
+
+    /**
+     * Get log
+     *
+     * @return Log
+     */
+    public static Log getLog() {
+    	if (log == null) {
+    	    return noopLog;
+    	}
+		return log;
+	}
+
+    /**
+     * Set log.  Try Api.setLog(LogFactory.getLog(Api.class));
+     *
+     * We do this instead of just setting in statically for android's sake.
+     *
+     * @return Log
+     */
+	public static void setLog(Log log) {
+		Api.log = log;
+	}
+
+    
+    /**
+     * @exclude
+     */
+    private String stringJoin(ArrayList<String> parts, String seperator) {
+    	StringBuffer buffer = new StringBuffer();
+    	for (int i = 0; i < parts.size() - 1; ++i) {
+    		buffer.append(parts.get(i));
+    		buffer.append(seperator);
+    	}
+    	buffer.append(parts.get(parts.size() - 1));
+    	return buffer.toString();
+    }
+    
+    /**
+     * @exclude
+     */
     private HttpClient getHttpClient() {
         if (_httpClient == null) {
             _httpClient = new DefaultHttpClient();
@@ -356,6 +402,9 @@ public class Api {
         return _httpClient;
     }
 
+    /**
+     * @exclude
+     */
     private ResponseHandler<String> getResponseHandler() {
         if (_responseHandler == null) {
             _responseHandler = new BasicResponseHandler();
@@ -363,6 +412,9 @@ public class Api {
         return _responseHandler;
     }
 
+    /**
+     * @exclude
+     */
     private String simpleHTTP(String url, Map<String, String> headers)
                                                        throws IOException {
         getLog().debug("calling  >> "+url);
@@ -374,21 +426,9 @@ public class Api {
         return response;
     }
 
-    public String toString() {
-        return "com.embedly.api.Api[key="+key+",host="+host+",userAgent="+
-            userAgent+"]";
-    }
-    
-    private String stringJoin(ArrayList<String> parts, String seperator) {
-    	StringBuffer buffer = new StringBuffer();
-    	for (int i = 0; i < parts.size() - 1; ++i) {
-    		buffer.append(parts.get(i));
-    		buffer.append(seperator);
-    	}
-    	buffer.append(parts.get(parts.size() - 1));
-    	return buffer.toString();
-    }
-    
+    /**
+     * @exclude
+     */
     private static class NoopLog implements Log {
 		public void debug(Object arg0) {}
 		public void debug(Object arg0, Throwable arg1) {}
