@@ -66,7 +66,7 @@ class ApiParameters {
      *
      * @param name Parameter name
      *
-     * @returns ArrayList<String> of values
+     * @return ArrayList<String> of values
      */
     public ArrayList<String> getParam(String name) {
         name = filterName(name);
@@ -93,7 +93,7 @@ class ApiParameters {
     /**
      * Returns a query string representing the parameters.
      *
-     * @returns query string
+     * @return query string
      */
     public String toQuery() throws UnsupportedEncodingException {
         ArrayList<String> query = new ArrayList<String>();

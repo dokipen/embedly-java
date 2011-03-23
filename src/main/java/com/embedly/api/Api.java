@@ -113,7 +113,7 @@ public class Api {
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
-     * @returns JSONArray of JSONObjects.  
+     * @return JSONArray of JSONObjects.  
      *          @see {@link https://pro.embed.ly/docs/oembed}
      */
     public JSONArray oembed(Map<String, Object> params) {
@@ -127,7 +127,7 @@ public class Api {
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
-     * @returns JSONArray of JSONObjects.  
+     * @return JSONArray of JSONObjects.  
      *          @see {@link https://pro.embed.ly/docs/objectify}
      */
     public JSONArray objectify(Map<String, Object> params) {
@@ -141,7 +141,7 @@ public class Api {
      *               a String, or a String[].  At this time, String[] is only
      *               valid for the "urls" parameter.
      *
-     * @returns JSONArray of JSONObjects.  
+     * @return JSONArray of JSONObjects.  
      *          @see {@link https://pro.embed.ly/docs/preview}
      */
     public JSONArray preview(Map<String, Object> params) {
@@ -161,7 +161,7 @@ public class Api {
      *                a String, or a String[].  At this time, String[] is only
      *                valid for the "urls" parameter.
      *
-     * @returns JSONArray of JSONObjects.  
+     * @return JSONArray of JSONObjects.  
      *          @see {@link https://pro.embed.ly/docs/}
      */
     public JSONArray apicall(String version, String action,
@@ -234,7 +234,7 @@ public class Api {
      *
      * @param regex    A pattern to check urls against
      *
-     * @returns        A JSONArray with 401 error responses filled in for
+     * @return        A JSONArray with 401 error responses filled in for
      *                 invalid urls.
      */
     public JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
@@ -297,7 +297,7 @@ public class Api {
      * Returns a JSON array from the API services endpoint.  This method
      * is only applicable to API hosts.
      *
-     * @returns JSONArray of services @see {@link http://api.embed.ly/docs/service}
+     * @return JSONArray of services @see {@link http://api.embed.ly/docs/service}
      */
     public JSONArray services() {
         JSONArray resp = null;
@@ -328,7 +328,7 @@ public class Api {
      * Returns a pattern object to match against URLs.  This method is only
      * applicable to API hosts, since Pro accepts any URL.
      *
-     * @returns Pattern for URLs valid on API endpoints
+     * @return Pattern for URLs valid on API endpoints
      */
     public Pattern servicesPattern() {
         try {
