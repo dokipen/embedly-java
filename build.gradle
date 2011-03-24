@@ -7,6 +7,7 @@ version = '0.1.0'
 
 configurations {
     runtime.exclude module: 'groovy'
+    meta
 }
 
 configure(install.repositories.mavenInstaller) {
@@ -49,19 +50,60 @@ jar {
    }
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    meta javadocJar
+    meta sourcesJar
+}
+
+uploadArchives.dependsOn sourcesJar, javadocJar
 uploadArchives {
     repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment ->
+            ["sources", "javadoc"].each { type ->
+                deployment.addArtifact configurations.meta.artifacts.find { it.classifier == type }
+            }
+        }
         repository(url: "file:///home/doki_pen/tmp/myRepo/")
         pom.project {
+            name 'Embedly API'
+            description 'Embedly client library for API and Pro'
+            url 'https://github.com/embedly/embedly-java'
+            inceptionYear "2011"
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
             groupId 'com.embedly'
+            scm {
+                url 'https://github.com/embedly/embedly-java'
+            }
+            developers {
+                developer {
+                    id "doki_pen"
+                    name "Bob Corsaro"
+                    roles {
+                        role "Lead"
+                        role "Founder"
+                    }
+                }
+            }
         }
     }
 }
 
-task sourceJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
 
 task copySteps(type: Copy) {
     from 'src/test/jruby'
