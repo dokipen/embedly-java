@@ -4,7 +4,7 @@ apply plugin: 'maven'
 apply plugin: 'eclipse'
 apply plugin:com.smokejumperit.gradle.CukePlugin
 
-version = '0.1.0'
+version = '0.1.0-SNAPSHOT'
 
 configurations {
     runtime.exclude module: 'groovy'
@@ -20,34 +20,20 @@ buildscript {
     }
 }
 
-
-configure(install.repositories.mavenInstaller) {
-    pom.project {
-        version '0.1.0'
-        artifactId 'embedly-api'
-        groupId 'com.embedly'
-    }
-}
-
 repositories {
     mavenCentral()
+    mavenRepo urls: "https://oss.sonatype.org/content/repositories/snapshots"
 }
 
 dependencies {
     compile 'org.json:json:20090211'
     compile 'org.apache.httpcomponents:httpclient:4.0-beta2'
     compile 'commons-lang:commons-lang:2.5'
-    runtime 'org.json:json:20090211'
-    runtime 'org.apache.httpcomponents:httpclient:4.0-beta2'
-    runtime 'commons-lang:commons-lang:2.5'
     groovy 'org.codehaus.groovy:groovy-all:1.7.6'
     testCompile 'org.codehaus.groovy:groovy-all:1.7.6'
     testCompile 'junit:junit:4.8.2'
     testCompile 'org.hamcrest:hamcrest-all:1.1'
     testRuntime 'org.picocontainer:picocontainer:2.13.2'
-    testRuntime 'log4j:log4j:1.2.16'
-    testRuntime 'junit:junit:4.8.2'
-    testRuntime 'org.hamcrest:hamcrest-all:1.1'
 }
 
 jar {
@@ -78,36 +64,49 @@ artifacts {
 
 uploadArchives.dependsOn sourcesJar, javadocJar
 uploadArchives {
-    repositories.mavenDeployer {
-        beforeDeployment { MavenDeployment deployment ->
-            ["sources", "javadoc"].each { type ->
-                deployment.addArtifact configurations.meta.artifacts.find { it.classifier == type }
+    if (project.hasProperty('repoUserName') && project.hasProperty('repoPassword')) {
+        repositories.mavenDeployer {
+            configureAuth = {
+                authentication(userName: repoUserName, password: repoPassword)
             }
-        }
-        repository(url: "file:///home/doki_pen/tmp/myRepo/")
-        pom.project {
-            name 'Embedly API'
-            description 'Embedly client library for API and Pro'
-            url 'https://github.com/embedly/embedly-java'
-            inceptionYear "2011"
-            licenses {
-                license {
-                    name 'The Apache Software License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    distribution 'repo'
+
+            beforeDeployment { MavenDeployment deployment ->
+                ["sources", "javadoc"].each { type ->
+                    deployment.addArtifact configurations.meta.artifacts.find { it.classifier == type }
                 }
             }
-            groupId 'com.embedly'
-            scm {
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/", configureAuth)
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/", configureAuth)
+
+            pom.project {
+                name 'Embedly API'
+                description 'Embedly client library for API and Pro'
                 url 'https://github.com/embedly/embedly-java'
-            }
-            developers {
-                developer {
-                    id "doki_pen"
-                    name "Bob Corsaro"
-                    roles {
-                        role "Lead"
-                        role "Founder"
+                inceptionYear "2011"
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+                groupId 'com.embedly'
+                scm {
+                    url 'https://github.com/embedly/embedly-java'
+                    connection 'https://github.com/embedly/embedly-java'
+                }
+                developers {
+                    developer {
+                        id "doki_pen"
+                        name "Bob Corsaro"
+                        email "rcorsaro@gmail.com"
+                        url "http://www.google.com/profiles/rcorsaro"
+                        roles {
+                            role "Lead"
+                            role "Founder"
+                        }
+                        timezone 'America/New_York'
                     }
                 }
             }
@@ -122,3 +121,4 @@ task copySteps(type: Copy) {
 }
 
 runFeatures.dependsOn copySteps
+build.dependsOn runFeatures
