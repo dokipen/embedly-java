@@ -272,6 +272,7 @@ public class Api {
      * Set log.  Try Api.setLog(LogFactory.getLog(Api.class));
      *
      * We do this instead of just setting in statically for android's sake.
+     * All package visible classes share the same logger.. sorry.
      */
 	public static void setLog(Log log) {
 		Utils.setLog(log);
