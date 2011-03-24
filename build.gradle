@@ -2,6 +2,7 @@ apply plugin: 'groovy'
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'eclipse'
+apply plugin:com.smokejumperit.gradle.CukePlugin
 
 version = '0.1.0'
 
@@ -9,6 +10,16 @@ configurations {
     runtime.exclude module: 'groovy'
     meta
 }
+
+buildscript {
+    repositories {
+        mavenRepo urls:'http://repo.smokejumperit.com'
+    }
+    dependencies {
+        classpath 'com.smokejumperit:gradle-plugins:0.7.1-SNAPSHOT'
+    }
+}
+
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
@@ -108,57 +119,4 @@ uploadArchives {
 task copySteps(type: Copy) {
     from 'src/test/jruby'
     into 'build/classes/test'
-}
-
-task libs(type: Sync) {
-    from configurations.runtime
-    into "$buildDir/libs"
-}
-
-task testLibs(type: Sync) {
-    from configurations.testRuntime
-    into "$buildDir/testLibs"
-}
-
-task checkJRuby {
-    logger.info(':exec jruby -v')
-    Process proc = ["jruby", "-v"].execute()
-    logger.info('>> stdout: '+proc.text)
-    logger.info('>> stderr: '+proc.err.text)
-    proc.waitFor()
-    if (proc.exitValue()) {
-        throw new RuntimeException('Please install JRuby');
-    }
-}
-
-task cukeLibs(dependsOn: checkJRuby) {
-    logger.info(':exec: ruby -e"%w{rubygems cuke4duke rspec}.each{|i| require i}"')
-    Process check = ['ruby', '-e', '%w{rubygems cuke4duke rspec}.each{|i| require i}'].execute()
-    logger.info('>> stdout: '+check.text)
-    logger.info('>> stderr: '+check.err.text)
-    check.waitFor()
-    if (check.exitValue()) {
-        logger.info('exec: gem install cuke4duke rspec')
-        Process install = ['gem', 'install', 'cuke4duke', 'rspec'].execute()
-        logger.info('>> stdout: '+install.text)
-        logger.info('>> stderr: '+install.err.text)
-        install.waitFor()
-        if (install.exitValue()) {
-            throw new RuntimeException('Please install cuke4duke')
-        }
-    }
-}
-
-task runFeatures(dependsOn: [compileJava, copySteps, testLibs, cukeLibs, processTestResources]) << {
-    Process proc = ["jruby",
-        "-S", "cuke4duke",
-        "--require", "$buildDir/classes/main/",
-        "--require", "$buildDir/classes/test/",
-        "--jars", "$buildDir/testLibs",
-        "src/test/features/"].execute()
-    proc.consumeProcessErrorStream(System.err)
-    proc.consumeProcessOutputStream(System.out)
-    if (proc.waitFor() != 0) {
-        throw new RuntimeException('runFeatures failed')
-    }
 }
