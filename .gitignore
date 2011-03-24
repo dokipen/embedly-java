@@ -9,3 +9,4 @@ repos
 bin
 .settings
 .project
+gradle.properties
