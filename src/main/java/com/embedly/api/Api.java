@@ -1,10 +1,12 @@
 package com.embedly.api;
 
+import static com.embedly.api.Utils.*;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -16,7 +18,6 @@ import org.json.JSONObject;
 
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 
@@ -30,18 +31,6 @@ public class Api {
 
     private HttpClient _httpClient;
     private ResponseHandler<String> _responseHandler;
-    
-    /**
-     * We use this somewhat strange pattern for logging so things will
-     * work on Android, which doesn't provide LogFactory in it's platform.
-     *
-     * To enable logging, do something like this before using the Api class::
-     *
-     *     Api.setLog(LogFactory.getLog(Api.class));
-     */
-    private static Log noopLog = new Api.NoopLog();
-
-    private static Log log = null;
 
 	public Api(String userAgent) {
         this(userAgent, null, null);
@@ -160,7 +149,8 @@ public class Api {
             }
 
             String call = this.host+"/1/services/javascript";
-            resp = new JSONArray(simpleHTTP(call, null));
+            resp = new JSONArray(simpleHTTP(getHttpClient(), getResponseHandler(), 
+            		call, getHeaders()));
         } catch (JSONException e) {
         	getLog().error("Failed to parse JSON in response", e);
             throw new RuntimeException("Failed to parse JSON in response", e);
@@ -169,6 +159,12 @@ public class Api {
             throw new RuntimeException("HTTP call failed", e);
         }
         return resp;
+    }
+    
+    private Map<String, String> getHeaders() {
+    	Map<String, String> headers = new HashMap<String, String>();
+    	headers.put("User-Agent", userAgent);
+    	return headers;
     }
 
     /**
@@ -225,11 +221,8 @@ public class Api {
      */
     private JSONArray apicall(String version, String action,
             Map<String, Object> params) {
-        JSONArray resp = null;
+        ResponseMaker resp = new ResponseMaker();
         try {
-            // fail safe response
-            resp = new JSONArray("[]");
-
             ApiParameters query = new ApiParameters();
             for (Map.Entry<String, Object> entry : params.entrySet()) {
                 if (entry.getValue() instanceof String[]) {
@@ -244,17 +237,18 @@ public class Api {
             ArrayList<String> urls = query.getParam("urls");
             if (key != null) {
                 query.push("key", key);
-                resp = filterByServices(urls, Pattern.compile(".*"));
+                urls = resp.prepare(urls, Pattern.compile(".*"));
             } else {
                 getLog().debug("checking urls against services");
-                resp = filterByServices(urls, servicesPattern());
+                urls = resp.prepare(urls, servicesPattern());
             }
 
             if (urls.size() > 0) {
                 String call = this.host+"/"+version+"/"+action+"?"+
                     query.toQuery();
-                String json_text = simpleHTTP(call, null);
-                fillResponse(resp, new JSONArray(json_text));
+                String json_text = simpleHTTP(getHttpClient(), 
+                		getResponseHandler(), call, getHeaders());
+                resp.fill(new JSONArray(json_text));
             }
 
         } catch (JSONException e) {
@@ -271,95 +265,8 @@ public class Api {
         if (getLog().isDebugEnabled()) {
             getLog().debug("Returning >> "+resp);
         }
-        return resp;
+        return resp.getResponse();
     }
-
-    /**
-     * Filters invalid urls and prepares a JSONArray for response.  This is
-     * used internally by apicall and should not be called directly.
-     * 
-     * SIDE EFFECT WARNING! This method modifies the urls parameter!
-     *
-     * The JSON array will have null values where responses will be inserted
-     * and 401 responses where urls were invalid.  After calling the embedly
-     * api, you can fill in the null values with the responses in the order
-     * they come back in.
-     *
-     * @param urls     An ArrayList<String> of urls to check.  This will be
-     *                 stripped of invalid urls.
-     *
-     * @param regex    A pattern to check urls against
-     *
-     * @return        A JSONArray with 401 error responses filled in for
-     *                 invalid urls.
-     */
-    JSONArray filterByServices(ArrayList<String> urls, Pattern regex)
-                                                         throws JSONException {
-    	getLog().debug("checking urls against services");
-        JSONArray response = new JSONArray();
-        for (int i = urls.size() - 1; i >= 0; --i) {
-            String url = urls.get(i);
-            Matcher match = regex.matcher(url);
-            if (match.matches()) {
-            	getLog().debug("url: "+url+" is valid");
-                response.put(i, (JSONObject)null);
-            } else {
-            	getLog().debug("url: "+url+" isn't valid");
-                response.put(i, new JSONObject("" +
-                    "{ url: \""+url+"\"" +
-                    ", error_code: \"401\"" +
-                    ", error_message: \"This service requires an Embedly Pro" +
-                                       " account\"" +
-                    ", type: \"error\"" +
-                    ", version: \"1.0\"" +
-                    "}"
-                ));
-                urls.remove(i);
-            }
-        }
-        return response;
-    }
-
-    /**
-     * Takes a JSONArray with empty place holders and fills it with filler.
-     *
-     * This method modifies toFill
-     *
-     * @param toFill  JSONArray will null values where values should be written
-     *
-     * @param filler  JSONArray with values that will be written to toFill
-     */
-    void fillResponse(JSONArray toFill, JSONArray filler)
-                                                throws JSONException {
-        int filler_index = 0;
-        for (int i = 0; i < toFill.length(); ++i) {
-            if (toFill.isNull(i)) {
-                toFill.put(i, filler.getJSONObject(filler_index));
-                if (filler_index >= filler.length()) {
-                    // This should _never_ happen
-                	getLog().error("we're on index "+filler_index+
-                            " but real_resp only has "+
-                            filler.length()+" members.");
-                	getLog().debug("Current response: "+toFill.toString());
-                    throw new RuntimeException("Something went " +
-                            "terribly wrong parsing the response");
-                }
-                filler_index++;
-            }
-        }
-    }
-
-    /**
-     * Get log
-     *
-     * @return Log
-     */
-    public static Log getLog() {
-    	if (log == null) {
-    	    return noopLog;
-    	}
-		return log;
-	}
 
     /**
      * Set log.  Try Api.setLog(LogFactory.getLog(Api.class));
@@ -367,18 +274,8 @@ public class Api {
      * We do this instead of just setting in statically for android's sake.
      */
 	public static void setLog(Log log) {
-		Api.log = log;
+		Utils.setLog(log);
 	}
-
-    private String stringJoin(ArrayList<String> parts, String seperator) {
-    	StringBuffer buffer = new StringBuffer();
-    	for (int i = 0; i < parts.size() - 1; ++i) {
-    		buffer.append(parts.get(i));
-    		buffer.append(seperator);
-    	}
-    	buffer.append(parts.get(parts.size() - 1));
-    	return buffer.toString();
-    }
     
     private HttpClient getHttpClient() {
         if (_httpClient == null) {
@@ -394,35 +291,4 @@ public class Api {
         return _responseHandler;
     }
 
-    private String simpleHTTP(String url, Map<String, String> headers)
-                                                       throws IOException {
-        getLog().debug("calling  >> "+url);
-        HttpGet httpget = new HttpGet(url);
-        String response = getHttpClient().execute(httpget, getResponseHandler());
-        if (getLog().isDebugEnabled()) {
-            getLog().debug("response << "+response);
-        }
-        return response;
-    }
-
-    private static class NoopLog implements Log {
-		public void debug(Object arg0) {}
-		public void debug(Object arg0, Throwable arg1) {}
-		public void error(Object arg0) {}
-		public void error(Object arg0, Throwable arg1) {}
-		public void fatal(Object arg0) {}
-		public void fatal(Object arg0, Throwable arg1) {}
-		public void info(Object arg0) {}
-		public void info(Object arg0, Throwable arg1) {}
-		public boolean isDebugEnabled() {return false;}
-		public boolean isErrorEnabled() {return false;}
-		public boolean isFatalEnabled() {return false;}
-		public boolean isInfoEnabled() {return false;}
-		public boolean isTraceEnabled() {return false;}
-		public boolean isWarnEnabled() {return false;}
-		public void trace(Object arg0) {}
-		public void trace(Object arg0, Throwable arg1) {}
-		public void warn(Object arg0) {}
-		public void warn(Object arg0, Throwable arg1) {}
-	}
 }

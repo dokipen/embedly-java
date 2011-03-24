@@ -1,6 +1,7 @@
 package com.embedly.api;
 
-import java.io.IOException;
+import static com.embedly.api.Utils.*;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -113,17 +114,5 @@ class ApiParameters {
     }
 
     
-    /**
-     * Utility method to join strings.  We don't use StringUtils because it
-     * isn't available on the Android platform.
-     */
-    private String stringJoin(ArrayList<String> parts, String seperator) {
-    	StringBuffer buffer = new StringBuffer();
-    	for (int i = 0; i < parts.size() - 1; ++i) {
-    		buffer.append(parts.get(i));
-    		buffer.append(seperator);
-    	}
-    	buffer.append(parts.get(parts.size() - 1));
-    	return buffer.toString();
-    }
+
 }

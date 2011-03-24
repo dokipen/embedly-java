@@ -8,11 +8,11 @@ import org.junit.Test
 import java.util.regex.Pattern
 import org.json.JSONArray
 
-class ApiTest {
+class ResponseMakerTest {
     @Test
     void shouldFilterInvalidUrls() {
         Api.setLog(getLog(Api.class));
-        def api = new Api("embedly-java-junit")
+        def resp = new ResponseMaker()
         def regex = Pattern.compile('.*testing.*')
         def urls = [
             "http://www.google.com/",
@@ -22,7 +22,8 @@ class ApiTest {
             "http://twitter.com/"
         ]
 
-        def response = api.filterByServices(urls, regex)
+        urls = resp.prepare(urls, regex)
+        def response = resp.getResponse()
 
         assertThat(response.length(), is(5))
         assertThat(response.getJSONObject(0), is(notNullValue()))
@@ -41,7 +42,9 @@ class ApiTest {
             "http://twitter.com/"
         ]
 
-        response = api.filterByServices(urls, regex)
+        resp = new ResponseMaker();
+        urls = resp.prepare(urls, regex)
+        response = resp.getResponse()
 
         assertThat(response.length(), is(3))
         assertThat(response.getJSONObject(0), is(notNullValue()))
@@ -52,7 +55,7 @@ class ApiTest {
     }
 
     void shouldFillResponse() {
-        def api = new Api("embedly-java-junit")
+        def resp = new ResponseMaker()
         def regex = Pattern.compile('.*testing.*')
         def urls = [
             "http://www.google.com/",
@@ -67,8 +70,9 @@ class ApiTest {
         ]
         """
 
-        def response = api.filterByServices(urls, regex)
-        api.fillResponse(response, new JSONArray(apiJSON))
+        urls = resp.prepare(urls, regex)
+        def response = resp.getResponse()
+        response.fill(new JSONArray(apiJSON))
 
         assertThat(response.getJSONObject(2), is(notNullValue()))
         assertThat(response.getJSONObject(3), is(notNullValue()))
