@@ -6,3 +6,6 @@ target
 .gradle
 build
 repos
+bin
+.settings
+.project
