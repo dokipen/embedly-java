@@ -1,4 +1,3 @@
-#require 'java'
 require 'rubygems'
 require 'json'
 require 'rspec/expectations'
