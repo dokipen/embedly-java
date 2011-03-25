@@ -64,6 +64,12 @@ If you would like cutting edge, then you can clone and install HEAD.
     gradle test
     EMBEDLY_KEY=xxxxxxxxxxxxx gradle runFeatures
 
+## Release
+
+    Add -Drelease=true -Dsign=true to gradle command line.  Be sure
+    gradle.settings has the appropriate settings and that version is
+    not SNAPSHOT.
+
 ## Note on Patches/Pull Requests
 
 * Fork the project.
