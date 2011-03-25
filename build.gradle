@@ -3,20 +3,22 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'eclipse'
 apply plugin:com.smokejumperit.gradle.CukePlugin
+apply plugin:de.huxhorn.gradle.pgp.PgpPlugin
 
-version = '0.1.0-SNAPSHOT'
+version = '0.1.1'
 
 configurations {
     runtime.exclude module: 'groovy'
-    meta
 }
 
 buildscript {
     repositories {
+        mavenCentral()
         mavenRepo urls:'http://repo.smokejumperit.com'
     }
     dependencies {
         classpath 'com.smokejumperit:gradle-plugins:0.7.1-SNAPSHOT'
+        classpath 'de.huxhorn.gradle:de.huxhorn.gradle.pgp-plugin:0.0.3'
     }
 }
 
@@ -58,8 +60,16 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 }
 
 artifacts {
-    meta javadocJar
-    meta sourcesJar
+    archives javadocJar
+    archives sourcesJar
+}
+
+if (project.hasProperty("pgpKeyId")) {
+    pgp {
+        secretKeyRingFile = new File("${System.properties['user.home']}/.gnupg/secring.gpg")
+        keyId = pgpKeyId
+        password = pgpPassword
+    }
 }
 
 uploadArchives.dependsOn sourcesJar, javadocJar
@@ -70,16 +80,15 @@ uploadArchives {
                 authentication(userName: repoUserName, password: repoPassword)
             }
 
-            beforeDeployment { MavenDeployment deployment ->
-                ["sources", "javadoc"].each { type ->
-                    deployment.addArtifact configurations.meta.artifacts.find { it.classifier == type }
-                }
-            }
-
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/", configureAuth)
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/", configureAuth)
 
             pom.project {
+                parent {
+                    groupId 'org.sonatype.oss'
+                    artifactId 'oss-parent'
+                    version '7'
+                }
                 name 'Embedly API'
                 description 'Embedly client library for API and Pro'
                 url 'https://github.com/embedly/embedly-java'
@@ -94,7 +103,8 @@ uploadArchives {
                 groupId 'com.embedly'
                 scm {
                     url 'https://github.com/embedly/embedly-java'
-                    connection 'https://github.com/embedly/embedly-java'
+                    connection 'scm:git:https://github.com/embedly/embedly-java.git'
+                    developerConnection 'scm:git:https://github.com/embedly/embedly-java.git'
                 }
                 developers {
                     developer {

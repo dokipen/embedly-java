@@ -164,6 +164,7 @@ public class Api {
     private Map<String, String> getHeaders() {
     	Map<String, String> headers = new HashMap<String, String>();
     	headers.put("User-Agent", userAgent);
+    	headers.put("X-Embedly-Client", "embedly-java-0.1.1");
     	return headers;
     }
 
